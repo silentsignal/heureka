@@ -6,24 +6,30 @@ A very suspicious piece of software - to test the effectiveness of heuristic AV 
 Tasks
 ----- 
 
-The purpose of this software is to test the behavior-based capabilities of anti-virus/HIDS/other software, not to evade detection, so the tasks performed by heureka should not aim evasion but the realistic yet harmless implementation of real-world tactics.
+Tasks are model implementations of typical malware behaviour. The can be seen as micro-modules that can be switched on and off in order to find out if a product detects some specific behaviour.
 	
   * VirtualAlloc() WX
     * Generate + Execute code (NOPs? More complex?)
-  * Save log to %TEMP% [TODO]
+  * Save log to %TEMP%
   * Encrypt/Decrypt [TODO]
     * XOR obfuscation 
     * Some standard algorithm, maybe RC4 
     * Key derived from environment variables 
   * Comminicate with .cn, .ru [TODO] 
     * Through configured proxy (HTTP(S))
-    * ICMP ?
-    * DNS ?
+    * ICMP tunneling
+    * DNS tunneling
   * Set autostart [TODO]
     * Registry
     * Startup folder
   * Look for office documents, PDFs [TODO]
 
+## Notes
+
+The purpose of this software is to test the behavior-based capabilities of anti-virus/HIDS/other software, not to evade detection, so the tasks performed by heureka should not aim evasion but the realistic yet harmless implementation of real-world tactics. 
+
+Shellcode can be arbitrarily complex and can perform unpredictable actions. Typical shellcode behaviour should be implemented in Tasks. If shellcode injection/decoding/etc. is needed, it is recommended to use some simple, harmless code (like the MsgBox provided). 
+  
 Feature Requirements
 --------------------
 
@@ -33,6 +39,13 @@ Feature Requirements
   * Command line [TODO]
   * Source code
 
+Coding Guidelines
+-----------------
+
+* Task functions return void
+* Output should be provided through the `print_XXX()` functions
+* Task function should clean up after themselves (memory, file handles etc.)
+  
 References
 ----------
 

