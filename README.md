@@ -10,8 +10,11 @@ Tasks are model implementations of typical malware behaviour. The can be seen as
 	
   * VirtualAlloc() WX
     * Generate + Execute code (NOPs? More complex?)
-  * Thread injection [TODO]
-  * Reflective DLL injection [TODO]
+  * DLL injection 
+    * Registry [TODO]
+	* Hooks [TODO]
+	* CreateRemoteThread
+    * Reflective DLL injection [TODO]
   * Save log to %TEMP%
   * Encrypt/Decrypt [TODO]
     * XOR obfuscation 
@@ -24,6 +27,7 @@ Tasks are model implementations of typical malware behaviour. The can be seen as
   * Set autostart [TODO]
     * Registry
     * Startup folder
+  * Detect virtualization [TODO]
   * Set up WBEM scripts [TODO]
   * Look for office documents, PDFs [TODO]
   * Environment-based behaviour [TODO]
