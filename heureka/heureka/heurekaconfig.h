@@ -3,7 +3,8 @@
 #define REMOTE_HOST 1			// The binary will contain reference to a remote host 
 #define ALLOC_RWX_CALL 0		// Task: Allocate memory, write and execute SHELLCODE 
 #define WRITE_LOG 0				// Task: Write system information to temporary directory
-#define DLL_INJECT_IE 1			// Task: Inject DLL (HEUREKADLL_PATH) into an Internet Explorer(IE_PATH) process
+#define DLL_INJECT_IE 0			// Task: Inject DLL (HEUREKADLL_PATH) into an Internet Explorer(IE_PATH) process
+#define SET_STARTUP_REGISTRY 1  // Task: Register heureka as a startup application in the Registry
 
 #define IE_PATH "C:\\Program Files\\Internet Explorer\\iexplore.exe"
 #define HEUREKADLL_PATH "Z:\\heureka\\heureka\\Debug\\heurekadll.dll"
