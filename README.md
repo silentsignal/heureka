@@ -36,7 +36,9 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
     * Current time
     * Environment variables (see Encryption)
     * CWD, ARGV, username
-
+  * Change hosts file [TODO]
+  * Change DNS [TODO]
+  * Connect back shell [TODO]
 ## Notes
 
 The purpose of this software is to test the behavior-based capabilities of anti-virus/HIDS/other software, not to evade detection, so the tasks performed by heureka should not aim evasion but the realistic yet harmless implementation of real-world tactics. However, it should be noted that some evasion techniques can also be indicators of malicious behaviour, and they should be implemented as well.
