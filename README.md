@@ -10,18 +10,18 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
 
 * Evasion	
   * VirtualAlloc() WX
-    * Generate + Execute code (NOPs? More complex?)
-  * Encrypt/Decrypt 
-    * XOR obfuscation 
-    * Some standard algorithm, maybe RC4 [TODO]
-    * Key derived from environment variables [TODO]
+    * Execute code 
+    * Encrypt/Decrypt 
+      * XOR obfuscation 
+      * Some standard algorithm, maybe RC4 [TODO]
+      * Key derived from environment variables [TODO]
   * Detect virtualization [TODO]
   * Turn off AV [TODO]
   * Environment-based behaviour [TODO]
     * Current time
     * Environment variables (see Encryption)
     * CWD, ARGV, username
-  * Digital signatures (http://www.symantec.com/connect/blogs/malware-using-fake-certificate-evade-detection) [TODO] 
+  * Digital signatures [TODO] 
 * Data Acquisition
   * DLL injection 
     * Registry 
@@ -35,10 +35,11 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
 * Communication
   * Turn off Windows firewall [TODO]
   * Save log to %TEMP%
-  * Communicate with .cn, .ru [TODO] 
-    * Through configured proxy (HTTP(S))
-    * ICMP tunneling
-    * DNS tunneling
+  * Communicate via HTTP 
+    * Through configured proxy
+    * Encrypted connection (HTTPS) [TODO]
+    * ICMP tunneling [TODO]
+    * DNS tunneling [TODO]
   * Connect back shell [TODO]
 * Persistence
   * Set autostart 
@@ -79,3 +80,4 @@ References
 * <http://www.symantec.com/connect/articles/heuristic-techniques-av-solutions-overview>
 * <https://www.sans.org/reading_room/whitepapers/malicious/about-heuristics_141>
 * <http://www.f-secure.com/export/system/fsgalleries/white-papers/f-secure_deepguard_whitepaper-06-11-2006.pdf>
+* <http://www.symantec.com/connect/blogs/malware-using-fake-certificate-evade-detection>
