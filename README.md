@@ -7,39 +7,43 @@ Tasks
 ----- 
 
 Tasks are model implementations of typical malware behaviour. They can be seen as micro-modules that can be switched on and off in order to find out if a product detects some specific behaviour.
-	
+
+* Evasion	
   * VirtualAlloc() WX
     * Generate + Execute code (NOPs? More complex?)
+  * Encrypt/Decrypt [TODO]
+    * XOR obfuscation 
+    * Some standard algorithm, maybe RC4 
+    * Key derived from environment variables 
+  * Detect virtualization [TODO]
+  * Turn off AV [TODO]
+  * Environment-based behaviour [TODO]
+    * Current time
+    * Environment variables (see Encryption)
+    * CWD, ARGV, username
+* Data Acquisition
   * DLL injection 
     * Registry [TODO]
 	* Hooks [TODO]
 	* CreateRemoteThread
     * Reflective DLL injection [TODO]
+  * Look for office documents, PDFs [TODO]
+* Communication
   * Turn off Windows firewall [TODO]
   * Save log to %TEMP%
-  * Encrypt/Decrypt [TODO]
-    * XOR obfuscation 
-    * Some standard algorithm, maybe RC4 
-    * Key derived from environment variables 
   * Comminicate with .cn, .ru [TODO] 
     * Through configured proxy (HTTP(S))
     * ICMP tunneling
     * DNS tunneling
+  * Connect back shell [TODO]
+* Persistence
   * Set autostart 
     * Registry
     * Startup folder [TODO]
   * Register service [TODO]
-  * Detect virtualization [TODO]
-  * Turn off AV [TODO]
   * Set up WBEM scripts [TODO]
-  * Look for office documents, PDFs [TODO]
-  * Environment-based behaviour [TODO]
-    * Current time
-    * Environment variables (see Encryption)
-    * CWD, ARGV, username
   * Change hosts file [TODO]
   * Change DNS [TODO]
-  * Connect back shell [TODO]
 
 ## Notes
 
