@@ -11,10 +11,10 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
 * Evasion	
   * VirtualAlloc() WX
     * Generate + Execute code (NOPs? More complex?)
-  * Encrypt/Decrypt [TODO]
+  * Encrypt/Decrypt 
     * XOR obfuscation 
-    * Some standard algorithm, maybe RC4 
-    * Key derived from environment variables 
+    * Some standard algorithm, maybe RC4 [TODO]
+    * Key derived from environment variables [TODO]
   * Detect virtualization [TODO]
   * Turn off AV [TODO]
   * Environment-based behaviour [TODO]

