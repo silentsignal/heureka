@@ -2,24 +2,78 @@
 #include<Windows.h>
 #include<ctime>
 #include<psapi.h>
+#include<Lmcons.h>
+#include<Strsafe.h>
 #include "heurekaconfig.h"
 
 // namespace setup
 using namespace std;
 
 // utility functions
-void print_status(const char *status){
-	cout << "[+] " << status << endl;
+void print_status(char* fmt,...){
+	TCHAR full_status[MAX_STATUS]="[+] \0";
+	StringCchCat(full_status,MAX_STATUS,fmt);
+	StringCchCat(full_status,MAX_STATUS,"\n");
+	va_list args;
+    va_start(args,fmt);
+    vprintf(full_status,args);
+    va_end(args);
 }
 
-void print_error(const char *status){
-	cout << "[!] " << status << endl;
+void print_error(char* fmt,...){
+	TCHAR full_status[MAX_STATUS]="[!] \0";
+	StringCchCat(full_status,MAX_STATUS,fmt);
+	StringCchCat(full_status,MAX_STATUS,"\n");
+	va_list args;
+    va_start(args,fmt);
+    vprintf(full_status,args);
+    va_end(args);
 }
 
 // test functions
 
 #if REVERSE_SHELL==1
 
+#endif
+
+#if SEARCH_DOCS==1 
+void search_docs(){
+	
+	HANDLE hFind;
+	TCHAR username[UNLEN+1];
+	DWORD size=UNLEN+1;
+
+	print_status("search_docs starts");
+
+	if (!GetUserName(username, &size)){
+		print_error("GetUserName failed");
+		return;
+	}
+	print_status("Username: %s",username);
+	for (int i=0;i<sizeof(search_docs_paths)/sizeof(TCHAR*);i++){
+		TCHAR search_path[MAX_PATH];
+		StringCbPrintf(search_path,MAX_PATH,search_docs_paths[i],username);
+		for (int j=0;j<sizeof(search_docs_patterns)/sizeof(TCHAR*);j++){
+			TCHAR search_pattern[MAX_PATH];
+			WIN32_FIND_DATA FindFileData;
+			StringCbPrintf(search_pattern,MAX_PATH,"%s\\%s",search_path,search_docs_patterns[j]);
+			print_status("Searching for files like %s",search_pattern);
+			hFind = FindFirstFile(search_pattern, &FindFileData);
+			if (hFind == INVALID_HANDLE_VALUE) 
+			{
+				print_error("FindFirstFile failed (%d)",GetLastError());
+			} 
+			else 
+			{
+				do{
+					print_status("File found: %s", FindFileData.cFileName);
+				}while (FindNextFile(hFind, &FindFileData) != 0);
+				FindClose(hFind);
+			}
+		}
+	}
+   print_status("dll_inject_registry ends");
+}
 #endif
 
 #if DLL_INJECT_REGISTRY==1
@@ -144,7 +198,7 @@ void dll_inject_ie(){
 Allocates writable and executable memory, writes and runs shellcode.
 */
 void alloc_rwx_call(){
-	print_status("alloc_rwx_call starts");
+	print_status("alloc_rwx_call starts");  
 	LPVOID p=VirtualAlloc(NULL,4096,MEM_COMMIT,PAGE_EXECUTE_READWRITE);
 	RtlMoveMemory(p,shellcode,sizeof(shellcode));
 	((void(*)())p)();
@@ -249,6 +303,10 @@ int main(int argc,char **argv){
 
 	#if DLL_INJECT_REGISTRY==1
 	dll_inject_registry();
+	#endif
+
+	#if SEARCH_DOCS==1
+	search_docs();
 	#endif
 
 	#if SHELLCODE_XOR==1 && ALLOC_RWX_XOR_CALL==1

@@ -28,7 +28,7 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
 	* Hooks [TODO]
 	* CreateRemoteThread
     * Reflective DLL injection [TODO]
-  * Look for office documents, PDFs [TODO]
+  * Look for office documents, PDFs
   * Install browser extensions [TODO]
     * Firefox
     * Chrome 
