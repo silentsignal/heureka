@@ -21,9 +21,10 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
     * Current time
     * Environment variables (see Encryption)
     * CWD, ARGV, username
+  * Digital signatures (http://www.symantec.com/connect/blogs/malware-using-fake-certificate-evade-detection) [TODO] 
 * Data Acquisition
   * DLL injection 
-    * Registry [TODO]
+    * Registry 
 	* Hooks [TODO]
 	* CreateRemoteThread
     * Reflective DLL injection [TODO]
@@ -31,7 +32,7 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
 * Communication
   * Turn off Windows firewall [TODO]
   * Save log to %TEMP%
-  * Comminicate with .cn, .ru [TODO] 
+  * Communicate with .cn, .ru [TODO] 
     * Through configured proxy (HTTP(S))
     * ICMP tunneling
     * DNS tunneling
