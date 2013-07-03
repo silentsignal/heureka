@@ -447,6 +447,26 @@ void write_log(){
 }
 #endif
 
+#if WRITE_HOSTS==1
+void write_hosts(){
+	print_status("write_hosts starts");
+	HANDLE hFile;
+
+	hFile=CreateFile("c:\\windows\\system32\\drivers\\etc\\hosts",FILE_GENERIC_WRITE,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL); // TODO installation dependent file path
+	if (hFile==INVALID_HANDLE_VALUE){
+		print_error("Unable to access hosts file: %d",GetLastError());
+		return;
+	}
+
+    DWORD dwWritten=0;
+	const char host_buf[]="127.0.0.1\theureka.local\r\n";
+	WriteFile(hFile, host_buf, strlen(host_buf),&dwWritten,NULL);
+			
+	CloseHandle(hFile);
+	print_status("write_hosts ends");
+}
+#endif
+
 // end of test functions - program entry point 
 int main(int argc,char **argv){
 	// set everything up
@@ -456,6 +476,10 @@ int main(int argc,char **argv){
 
 	#if WRITE_LOG==1
 	write_log();
+	#endif
+
+	#if WRITE_HOSTS==1
+	write_hosts();
 	#endif
 
 	#if DLL_INJECT_IE==1

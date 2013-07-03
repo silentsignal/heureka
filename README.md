@@ -49,7 +49,7 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
   * Download, store and execute [TODO]
   * Register service [TODO]
   * Set up WBEM scripts [TODO]
-  * Change hosts file [TODO]
+  * Change hosts file
   * Change DNS [TODO]
 
 ## Notes
