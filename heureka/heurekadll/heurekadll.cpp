@@ -1,9 +1,6 @@
-#pragma comment(lib, "winhttp.lib")
 #include "heurekadll.h"
 #include<iostream>
 #include<Windows.h>
-#include<winhttp.h>
-#include<Strsafe.h>
 
 namespace heurekadll{
 
