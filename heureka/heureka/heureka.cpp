@@ -384,15 +384,20 @@ void* GetPayloadExportAddr( LPCSTR lpPath, HMODULE hPayloadBase, LPCSTR lpFuncti
   HMODULE hLoaded = LoadLibrary( lpPath );
 
   if( hLoaded == NULL ) {
-	DWORD x=GetLastError();
+	  print_error("Unable to load module: %d",GetLastError());
 	return NULL;
   } else {
-    void* lpFunc   = GetProcAddress( hLoaded, lpFunctionName );
+    void* lpFunc = GetProcAddress( hLoaded, lpFunctionName );
+	if (lpFunc==NULL){
+		print_error("Unable to retreive proc address! %s",lpFunctionName);
+		return NULL;
+	}
     DWORD dwOffset = (char*)lpFunc - (char*)hLoaded;
 
     FreeLibrary( hLoaded );
 	DWORD sum=(DWORD)hPayloadBase + dwOffset;
     char* ret=(char*)sum;
+	print_status("Calculated proc address: %x",ret);
 	return ret;
   }
 }
@@ -406,8 +411,6 @@ void dll_inject_ie(){
 
 	HMODULE hKernel32=GetModuleHandle("Kernel32");
 	FARPROC aLoadLibrary=GetProcAddress(hKernel32,"LoadLibraryA");
-	
-    unsigned int i;
 
 	ZeroMemory(&si,sizeof(si));
 	si.cb=sizeof(si);
