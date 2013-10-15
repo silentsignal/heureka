@@ -3,6 +3,8 @@ Heureka
 
 A very suspicious piece of software - to test the effectiveness of heuristic AV engines/HIPS's/other magic.
 
+After the Hacktivity I was pointed to [Matousec's toolkit](http://www.matousec.com/projects/security-software-testing-suite-64/) that basically has the same purpose as Heureka. This project will probably be abandoned.
+
 Tasks
 ----- 
 
@@ -33,7 +35,9 @@ Tasks are model implementations of typical malware behaviour. They can be seen a
   * Install browser extensions [TODO]
     * Firefox
     * Chrome 
-  * Hash dump [TODO]
+  * Get SYSTEM [TODO]
+  * Cached domain credentials dump [TODO]
+  * Dump LSA secrets [TODO]
   * GINA DLL [TODO]
     * Wlx* exports 
 * Communication
