@@ -3,7 +3,7 @@ Heureka
 
 A very suspicious piece of software - to test the effectiveness of heuristic AV engines/HIPS's/other magic.
 
-After the Hacktivity I was pointed to [Matousec's toolkit](http://www.matousec.com/projects/security-software-testing-suite-64/) that basically has the same purpose as Heureka. This project will probably be abandoned.
+After the Hacktivity presentation I was pointed to [Matousec's toolkit](http://www.matousec.com/projects/security-software-testing-suite-64/) that basically has the same purpose as Heureka. This project will probably be abandoned.
 
 Tasks
 ----- 
